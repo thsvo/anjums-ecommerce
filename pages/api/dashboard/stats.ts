@@ -80,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const formattedRecentOrders = recentOrders.map(order => ({
       id: order.id,
-      customer: `${order.user.firstName} ${order.user.lastName}`,
+      customer: order.user ? `${order.user.firstName} ${order.user.lastName}` : 'Guest Customer',
       total: order.total,
       status: order.status,
       createdAt: order.createdAt

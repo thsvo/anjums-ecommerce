@@ -49,3 +49,4 @@ __snapshots__/
 
 # Optional: Ignore storybook static build
 storybook-static/
+.vercel

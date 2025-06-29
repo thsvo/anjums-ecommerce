@@ -41,10 +41,7 @@ async function getAddresses(req: NextApiRequest, res: NextApiResponse, userId: s
   try {
     const addresses = await prisma.address.findMany({
       where: { userId },
-      orderBy: [
-        { isDefault: 'desc' },
-        { createdA: 'desc' }
-      ]
+      orderBy: { isDefault: 'desc' }
     });
 
     res.status(200).json({ addresses });
