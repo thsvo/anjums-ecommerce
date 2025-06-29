@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "JWT_SECRET": "@jwt_secret",
+    "NEXTAUTH_URL": "@nextauth_url",
+    "NEXTAUTH_SECRET": "@nextauth_secret",
+    "SSLCOMMERZ_STORE_ID": "@sslcommerz_store_id",
+    "SSLCOMMERZ_STORE_PASSWORD": "@sslcommerz_store_password",
+    "SSLCOMMERZ_IS_LIVE": "@sslcommerz_is_live",
+    "WHATSAPP_ACCESS_TOKEN": "@whatsapp_access_token",
+    "WHATSAPP_PHONE_NUMBER_ID": "@whatsapp_phone_number_id",
+    "WHATSAPP_BUSINESS_ACCOUNT_ID": "@whatsapp_business_account_id",
+    "WHATSAPP_WEBHOOK_VERIFY_TOKEN": "@whatsapp_webhook_verify_token",
+    "WHATSAPP_API_VERSION": "@whatsapp_api_version"
+  },
+  "functions": {
+    "pages/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}

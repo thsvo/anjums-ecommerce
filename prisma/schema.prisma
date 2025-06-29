@@ -27,6 +27,8 @@ model User {
   addresses Address[]
   smsCampaigns SMSCampaign[]
   smsCampaignLogs SMSCampaignLog[]
+  whatsappCampaigns WhatsAppCampaign[]
+  whatsappCampaignLogs WhatsAppCampaignLog[]
 
   @@map("users")
 }
@@ -232,4 +234,84 @@ enum SMSStatus {
   SCHEDULED
   SENT
   FAILED
+}
+
+model WhatsAppCampaign {
+  id              String              @id @default(cuid())
+  name            String
+  messageType     WhatsAppMessageType @default(TEXT)
+  textMessage     String?             // For text messages
+  templateName    String?             // For template messages
+  templateParams  Json?               // Template parameters
+  mediaUrl        String?             // For media messages
+  mediaType       MediaType?          // IMAGE, VIDEO, AUDIO, DOCUMENT
+  recipients      String[]            // Array of phone numbers with country code
+  status          WhatsAppStatus      @default(DRAFT)
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  totalCount      Int                 @default(0)
+  deliveredCount  Int                 @default(0)
+  readCount       Int                 @default(0)
+  failedCount     Int                 @default(0)
+  apiResponse     Json?               // Store API response
+  failedNumbers   String[]            @default([])
+  createdBy       String?             // Made optional for public access
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  user User? @relation(fields: [createdBy], references: [id])
+  logs WhatsAppCampaignLog[]
+
+  @@map("whatsapp_campaigns")
+}
+
+model WhatsAppCampaignLog {
+  id         String   @id @default(cuid())
+  campaignId String
+  action     String   // CREATED, SENT, DELIVERED, READ, FAILED, etc.
+  details    Json?    // Additional details
+  phoneNumber String? // Specific phone number for delivery tracking
+  userId     String?  // Made optional for public access
+  createdAt  DateTime @default(now())
+
+  // Relations
+  campaign WhatsAppCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user     User?            @relation(fields: [userId], references: [id])
+
+  @@map("whatsapp_campaign_logs")
+}
+
+model WhatsAppTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  displayName String
+  category    String   // MARKETING, UTILITY, AUTHENTICATION
+  language    String   @default("en")
+  status      String   // APPROVED, PENDING, REJECTED
+  components  Json     // Template components structure
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("whatsapp_templates")
+}
+
+enum WhatsAppMessageType {
+  TEXT
+  TEMPLATE
+  MEDIA
+}
+
+enum WhatsAppStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  FAILED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
 }
