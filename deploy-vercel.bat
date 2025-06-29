@@ -12,7 +12,7 @@ if %ERRORLEVEL% NEQ 0 (
 echo 🔧 Generating Prisma client...
 npx prisma generate
 
-echo 🏗️  Building application...
+echo 🏗️  Building application locally...
 npm run build
 if %ERRORLEVEL% NEQ 0 (
     echo ❌ Build failed! Please fix errors and try again.
@@ -21,17 +21,22 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
-echo 🔐 Note: Make sure to set these environment variables in Vercel dashboard:
-echo - DATABASE_URL
-echo - WHATSAPP_ACCESS_TOKEN
-echo - WHATSAPP_PHONE_NUMBER_ID
-echo - WHATSAPP_BUSINESS_ACCOUNT_ID
-echo - WHATSAPP_WEBHOOK_VERIFY_TOKEN
-echo - NEXT_PUBLIC_SUPABASE_URL
-echo - NEXT_PUBLIC_SUPABASE_ANON_KEY
-echo - SUPABASE_SERVICE_ROLE_KEY
-echo - JWT_SECRET
-echo - NEXTAUTH_SECRET
+echo 🔐 Environment Variables for Vercel Dashboard:
+echo Copy these to your Vercel project settings:
+echo.
+echo DATABASE_URL=postgres://postgres.kxinejschzdaiwbbdklk:ZgGmvXkPqwS3BaBD@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require
+echo NEXT_PUBLIC_SUPABASE_URL=https://kxinejschzdaiwbbdklk.supabase.co
+echo NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4aW5lanNjaHpkYWl3YmJka2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMjgzNjIsImV4cCI6MjA2NjgwNDM2Mn0.VB_7DSH8RgAduK9oh_wXOLtSl3zlwj5OqS_MbjbICoY
+echo SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4aW5lanNjaHpkYWl3YmJka2xrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTIyODM2MiwiZXhwIjoyMDY2ODA0MzYyfQ.4lKJELJ6A4_IyWqTvXKxe7IT-hzDrbJX7Z6JsDaAGe0
+echo WHATSAPP_ACCESS_TOKEN=your_access_token_here
+echo WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id_here
+echo WHATSAPP_BUSINESS_ACCOUNT_ID=your_business_account_id_here
+echo WHATSAPP_WEBHOOK_VERIFY_TOKEN=whatsapp_webhook_verify_anjum_2025_secure_token_xyz789
+echo JWT_SECRET=mysecretkey
+echo NEXTAUTH_SECRET=mysecretkey
+echo SSLCOMMERZ_STORE_ID=anjum685fefcf7abf8
+echo SSLCOMMERZ_STORE_PASSWORD=anjum685fefcf7abf8@ssl
+echo SSLCOMMERZ_IS_LIVE=false
 echo.
 
 echo 🌐 Deploying to Vercel...
