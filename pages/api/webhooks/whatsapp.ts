@@ -1,197 +1,197 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 
-const prisma = new PrismaClient();
+interface WhatsAppWebhookMessage {
+  object: string;
+  entry: Array<{
+    id: string;
+    changes: Array<{
+      value: {
+        messaging_product: string;
+        metadata: {
+          display_phone_number: string;
+          phone_number_id: string;
+        };
+        contacts?: Array<{
+          profile: {
+            name: string;
+          };
+          wa_id: string;
+        }>;
+        messages?: Array<{
+          from: string;
+          id: string;
+          timestamp: string;
+          text?: {
+            body: string;
+          };
+          type: string;
+        }>;
+        statuses?: Array<{
+          id: string;
+          status: string;
+          timestamp: string;
+          recipient_id: string;
+        }>;
+      };
+      field: string;
+    }>;
+  }>;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  try {
-    if (req.method === 'GET') {
-      // Webhook verification (Meta requires this)
-      return handleWebhookVerification(req, res);
-    } else if (req.method === 'POST') {
-      // Handle incoming webhook events
-      return handleWebhookEvent(req, res);
+  console.log(`WhatsApp Webhook - ${req.method} request received`);
+  console.log('Headers:', req.headers);
+  console.log('Query:', req.query);
+  console.log('Body:', req.body);
+
+  // Handle GET request for webhook verification
+  if (req.method === 'GET') {
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+
+    console.log('Webhook verification request:', { mode, token, challenge });
+
+    // Check if the mode and token are correct
+    if (mode === 'subscribe' && token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
+      console.log('Webhook verified successfully');
+      // Respond with the challenge to verify the webhook
+      return res.status(200).send(challenge);
     } else {
-      return res.status(405).json({ message: 'Method not allowed' });
+      console.log('Webhook verification failed:', {
+        expectedToken: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN,
+        receivedToken: token
+      });
+      return res.status(403).json({ message: 'Forbidden' });
     }
-  } catch (error) {
-    console.error('Webhook error:', error);
-    return res.status(500).json({ 
-      message: 'Internal server error', 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    });
-  }
-}
-
-// Handle webhook verification challenge from Meta
-function handleWebhookVerification(req: NextApiRequest, res: NextApiResponse) {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
-
-  const verifyToken = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
-
-  if (!verifyToken) {
-    console.error('WHATSAPP_WEBHOOK_VERIFY_TOKEN not configured');
-    return res.status(500).json({ error: 'Webhook verify token not configured' });
   }
 
-  // Check if mode and token sent are correct
-  if (mode === 'subscribe' && token === verifyToken) {
-    console.log('Webhook verified successfully!');
-    return res.status(200).send(challenge);
-  } else {
-    console.error('Webhook verification failed. Mode:', mode, 'Token match:', token === verifyToken);
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-}
+  // Handle POST request for webhook events
+  if (req.method === 'POST') {
+    try {
+      // Verify the webhook signature (optional but recommended for production)
+      const signature = req.headers['x-hub-signature-256'] as string;
+      if (signature && process.env.WHATSAPP_WEBHOOK_SECRET) {
+        const expectedSignature = crypto
+          .createHmac('sha256', process.env.WHATSAPP_WEBHOOK_SECRET)
+          .update(JSON.stringify(req.body))
+          .digest('hex');
+        
+        if (`sha256=${expectedSignature}` !== signature) {
+          console.log('Invalid webhook signature');
+          return res.status(401).json({ message: 'Invalid signature' });
+        }
+      }
 
-// Handle incoming webhook events
-async function handleWebhookEvent(req: NextApiRequest, res: NextApiResponse) {
-  const body = req.body;
+      const webhookData: WhatsAppWebhookMessage = req.body;
 
-  console.log('Received webhook:', JSON.stringify(body, null, 2));
-
-  // Check if this is a WhatsApp Business API webhook
-  if (body.object === 'whatsapp_business_account') {
-    if (body.entry && body.entry.length > 0) {
-      for (const entry of body.entry) {
-        // Process each change in the entry
-        if (entry.changes && entry.changes.length > 0) {
+      // Process the webhook data
+      if (webhookData.object === 'whatsapp_business_account') {
+        for (const entry of webhookData.entry) {
           for (const change of entry.changes) {
-            await processWebhookChange(change);
+            if (change.field === 'messages') {
+              // Handle incoming messages
+              if (change.value.messages) {
+                for (const message of change.value.messages) {
+                  console.log('Received message:', {
+                    from: message.from,
+                    text: message.text?.body,
+                    timestamp: message.timestamp
+                  });
+
+                  // Here you can add your business logic to handle incoming messages
+                  // For example:
+                  // - Save to database
+                  // - Send auto-reply
+                  // - Process customer service requests
+                  // - Handle order inquiries
+                  
+                  await handleIncomingMessage(message, change.value.metadata);
+                }
+              }
+
+              // Handle message status updates (delivered, read, etc.)
+              if (change.value.statuses) {
+                for (const status of change.value.statuses) {
+                  console.log('Message status update:', {
+                    messageId: status.id,
+                    status: status.status,
+                    timestamp: status.timestamp
+                  });
+
+                  await handleMessageStatus(status);
+                }
+              }
+            }
           }
         }
       }
+
+      // Always respond with 200 to acknowledge receipt
+      return res.status(200).json({ message: 'Webhook received' });
+
+    } catch (error) {
+      console.error('Error processing webhook:', error);
+      // Still return 200 to avoid WhatsApp retrying
+      return res.status(200).json({ message: 'Error processed' });
     }
   }
 
-  // Return 200 OK to acknowledge receipt
-  return res.status(200).json({ success: true });
+  // Method not allowed
+  return res.status(405).json({ message: 'Method not allowed' });
 }
 
-async function processWebhookChange(change: any) {
+// Handle incoming messages
+async function handleIncomingMessage(
+  message: any,
+  metadata: { display_phone_number: string; phone_number_id: string }
+) {
   try {
-    console.log('Processing webhook change:', JSON.stringify(change, null, 2));
+    console.log('Processing incoming message:', message);
 
-    if (change.field === 'messages') {
-      const value = change.value;
+    // Example: Save message to database
+    // await prisma.whatsAppMessage.create({
+    //   data: {
+    //     messageId: message.id,
+    //     from: message.from,
+    //     text: message.text?.body,
+    //     timestamp: new Date(parseInt(message.timestamp) * 1000),
+    //     phoneNumberId: metadata.phone_number_id,
+    //   }
+    // });
 
-      // Handle message status updates
-      if (value.statuses && value.statuses.length > 0) {
-        for (const status of value.statuses) {
-          await handleMessageStatus(status);
-        }
-      }
-
-      // Handle incoming messages (if you want to support replies)
-      if (value.messages && value.messages.length > 0) {
-        for (const message of value.messages) {
-          await handleIncomingMessage(message);
-        }
-      }
+    // Example: Send auto-reply for specific keywords
+    if (message.text?.body.toLowerCase().includes('help')) {
+      // You can implement auto-reply logic here
+      console.log('Auto-reply trigger detected for help request');
     }
-  } catch (error) {
-    console.error('Error processing webhook change:', error);
-  }
-}
 
-async function handleMessageStatus(status: any) {
-  try {
-    const { id: messageId, status: messageStatus, timestamp, recipient_id } = status;
-
-    console.log(`Message ${messageId} status: ${messageStatus} for recipient ${recipient_id}`);
-
-    // Update campaign logs based on message status
-    const campaigns = await prisma.whatsAppCampaign.findMany({
-      where: {
-        recipients: {
-          has: recipient_id
-        }
-      }
-    });
-
-    for (const campaign of campaigns) {
-      // Create a log entry for this status update
-      await prisma.whatsAppCampaignLog.create({
-        data: {
-          campaignId: campaign.id,
-          action: messageStatus.toUpperCase(),
-          details: {
-            messageId,
-            status: messageStatus,
-            timestamp,
-            recipientId: recipient_id
-          },
-          phoneNumber: recipient_id
-        }
-      });
-
-      // Update campaign statistics based on status
-      const updateData: any = {};
-
-      switch (messageStatus) {
-        case 'delivered':
-          // Message was delivered to WhatsApp servers
-          updateData.deliveredCount = {
-            increment: 1
-          };
-          break;
-        case 'read':
-          // Message was read by recipient
-          updateData.readCount = {
-            increment: 1
-          };
-          break;
-        case 'failed':
-          // Message failed to deliver
-          updateData.failedCount = {
-            increment: 1
-          };
-          updateData.failedNumbers = {
-            push: recipient_id
-          };
-          break;
-      }
-
-      if (Object.keys(updateData).length > 0) {
-        await prisma.whatsAppCampaign.update({
-          where: { id: campaign.id },
-          data: updateData
-        });
-      }
+    if (message.text?.body.toLowerCase().includes('order')) {
+      // Handle order-related inquiries
+      console.log('Order inquiry detected');
     }
-  } catch (error) {
-    console.error('Error handling message status:', error);
-  }
-}
-
-async function handleIncomingMessage(message: any) {
-  try {
-    const { from, id: messageId, type, timestamp } = message;
-
-    console.log(`Received ${type} message from ${from}: ${messageId}`);
-
-    // Log incoming message (could be used for auto-replies or customer service)
-    await prisma.whatsAppCampaignLog.create({
-      data: {
-        campaignId: 'incoming', // Special ID for incoming messages
-        action: 'INCOMING_MESSAGE',
-        details: {
-          messageId,
-          from,
-          type,
-          timestamp,
-          message
-        },
-        phoneNumber: from
-      }
-    });
-
-    // You could implement auto-reply logic here
-    // For example, send a welcome message for first-time contacts
 
   } catch (error) {
     console.error('Error handling incoming message:', error);
+  }
+}
+
+// Handle message status updates
+async function handleMessageStatus(status: any) {
+  try {
+    console.log('Processing message status:', status);
+
+    // Example: Update message status in database
+    // await prisma.whatsAppMessage.updateMany({
+    //   where: { messageId: status.id },
+    //   data: { 
+    //     status: status.status,
+    //     statusTimestamp: new Date(parseInt(status.timestamp) * 1000)
+    //   }
+    // });
+
+  } catch (error) {
+    console.error('Error handling message status:', error);
   }
 }

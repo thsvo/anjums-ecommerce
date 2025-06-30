@@ -357,7 +357,7 @@ export function parseWhatsAppRecipients(recipientsText: string): string[] {
         phoneNumberId: '',
         businessAccountId: '',
         webhookVerifyToken: '',
-        apiVersion: 'v18.0'
+        apiVersion: 'v23.0'
       });
       return (api as any).validatePhoneNumber(phone);
     });

@@ -70,11 +70,6 @@ const WhatsAppCampaignPage: React.FC = () => {
   const [testNumber, setTestNumber] = useState('');
   const [testMessage, setTestMessage] = useState('');
   const [testSending, setTestSending] = useState(false);
-  
-  // Webhook testing states
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [webhookTesting, setWebhookTesting] = useState(false);
-  const [webhookResult, setWebhookResult] = useState<any>(null);
 
   // API Configuration states
   const [showConfigHelp, setShowConfigHelp] = useState(false);
@@ -326,37 +321,6 @@ const WhatsAppCampaignPage: React.FC = () => {
     }
   };
 
-  const testWebhook = async () => {
-    if (!webhookUrl) {
-      alert('Please enter webhook URL');
-      return;
-    }
-
-    try {
-      setWebhookTesting(true);
-      setWebhookResult(null);
-
-      const response = await makeApiRequest('/api/admin/whatsapp/test-webhook', {
-        method: 'POST',
-        body: JSON.stringify({ webhookUrl }),
-      });
-
-      const result = await response.json();
-      setWebhookResult(result);
-
-      if (result.success) {
-        alert('Webhook test successful! ✅');
-      } else {
-        alert(`Webhook test failed: ${result.message}`);
-      }
-    } catch (error) {
-      console.error('Error testing webhook:', error);
-      alert(`Network error: ${error instanceof Error ? error.message : 'Please check your connection'}`);
-    } finally {
-      setWebhookTesting(false);
-    }
-  };
-
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'SENT': return 'default';
@@ -496,7 +460,7 @@ const WhatsAppCampaignPage: React.FC = () => {
                       <div>WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id_here</div>
                       <div>WHATSAPP_BUSINESS_ACCOUNT_ID=your_business_account_id_here</div>
                       <div>WHATSAPP_WEBHOOK_VERIFY_TOKEN=your_webhook_verify_token_here</div>
-                      <div>WHATSAPP_API_VERSION=v18.0</div>
+                      <div>WHATSAPP_API_VERSION=v23.0</div>
                     </div>
                   </div>
 
@@ -530,33 +494,6 @@ const WhatsAppCampaignPage: React.FC = () => {
                     </ul>
                   </div>
 
-                  <div>
-                    <h4 className="font-semibold">Step 7: Setup Webhooks (Important!)</h4>
-                    <p>Configure webhooks to receive delivery confirmations and message status:</p>
-                    <div className="bg-blue-50 p-3 rounded mt-2">
-                      <div className="text-sm space-y-2">
-                        <div><strong>Webhook URL (Production - Vercel):</strong></div>
-                        <div className="font-mono text-xs bg-white p-2 rounded">
-                          https://your-app-name.vercel.app/api/webhooks/whatsapp
-                        </div>
-                        <div><strong>Webhook URL (Local with ngrok):</strong></div>
-                        <div className="font-mono text-xs bg-white p-2 rounded">
-                          https://your-ngrok-url.ngrok.io/api/webhooks/whatsapp
-                        </div>
-                        <div><strong>Verify Token:</strong></div>
-                        <div className="font-mono text-xs bg-white p-2 rounded">
-                          whatsapp_webhook_verify_anjum_2025_secure_token_xyz789
-                        </div>
-                      </div>
-                    </div>
-                    <ol className="list-decimal list-inside space-y-1 ml-4 mt-2">
-                      <li>Go to <strong>WhatsApp → Configuration → Webhooks</strong></li>
-                      <li>Enter your webhook URL and verify token</li>
-                      <li>Subscribe to fields: <strong>messages</strong></li>
-                      <li>Click "Verify and Save"</li>
-                    </ol>
-                  </div>
-
                   <div className="bg-yellow-50 p-3 rounded">
                     <h4 className="font-semibold text-yellow-800">Important Notes:</h4>
                     <ul className="list-disc list-inside space-y-1 ml-4 text-yellow-700">
@@ -575,7 +512,7 @@ const WhatsAppCampaignPage: React.FC = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Create Campaign Form */}
           <Card>
             <CardHeader>
@@ -762,61 +699,6 @@ const WhatsAppCampaignPage: React.FC = () => {
                   <li>Verified test numbers in your WhatsApp Business account</li>
                   <li>Numbers that have messaged your business first (within 24 hours)</li>
                 </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Webhook Testing */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Test Webhook</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="webhookUrl">Webhook URL</Label>
-                <Input
-                  id="webhookUrl"
-                  type="url"
-                  value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
-                  placeholder="https://your-app-name.vercel.app/api/webhooks/whatsapp"
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  For production: Use your Vercel app URL | For local: Use ngrok URL
-                </div>
-              </div>
-
-              <Button 
-                onClick={testWebhook} 
-                className="w-full"
-                disabled={webhookTesting}
-              >
-                {webhookTesting ? 'Testing...' : 'Test Webhook'}
-              </Button>
-
-              {webhookResult && (
-                <div className={`p-3 rounded text-sm ${webhookResult.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-                  <div className="font-semibold">
-                    {webhookResult.success ? '✅ Success' : '❌ Failed'}
-                  </div>
-                  <div className="mt-1">{webhookResult.message}</div>
-                  {webhookResult.details && (
-                    <div className="mt-2 text-xs">
-                      <strong>Details:</strong> Status {webhookResult.details.status}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="text-sm text-gray-600 space-y-1">
-                <p><strong>Setup Instructions:</strong></p>
-                <ol className="list-decimal list-inside ml-4">
-                  <li><strong>For Vercel (Recommended):</strong> Run <code>deploy-vercel.bat</code> or follow VERCEL_DEPLOYMENT_GUIDE.md</li>
-                  <li><strong>For local testing:</strong> Install ngrok and run <code>ngrok http 3000</code></li>
-                  <li>Go to Meta Developers → WhatsApp → Configuration</li>
-                  <li>Enter webhook URL and verify token</li>
-                  <li>Subscribe to "messages" field</li>
-                </ol>
               </div>
             </CardContent>
           </Card>
