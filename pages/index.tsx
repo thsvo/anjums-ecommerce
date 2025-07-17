@@ -124,7 +124,7 @@ export default function Home() {
     <>
       <Head>
         <title>Anjum's - Your Ultimate Shopping Destination</title>
-        <meta name="description" content="Millions of products, great deals, fast delivery - Shop everything you need at ShopHub" />
+        <meta name="description" content="Millions of products, great deals, fast delivery - Shop everything you need at Anjum's" />
       </Head>
 
       <div className="min-h-screen bg-gray-50">
@@ -879,7 +879,7 @@ export default function Home() {
         <section className="py-16 bg-gradient-to-r from-gray-100 to-gray-200">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold mb-4 text-gray-900">Why Choose ShopHub?</h2>
+              <h2 className="text-4xl font-bold mb-4 text-gray-900">Why Choose Anjum's?</h2>
               <p className="text-gray-600 text-lg">Experience the best online shopping with our premium services</p>
             </div>
             

@@ -54,8 +54,8 @@ const Register: React.FC = () => {
   return (
     <>
       <Head>
-        <title>Register - ShopHub</title>
-        <meta name="description" content="Create your ShopHub account" />
+        <title>Register - Anjum's</title>
+        <meta name="description" content="Create your Anjum's account" />
       </Head>
 
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -217,7 +217,7 @@ const Register: React.FC = () => {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Why join ShopHub?</span>
+                  <span className="px-2 bg-white text-gray-500">Why join Anjum's?</span>
                 </div>
               </div>
 

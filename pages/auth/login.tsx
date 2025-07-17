@@ -40,8 +40,8 @@ const Login: React.FC = () => {
   return (
     <>
       <Head>
-        <title>Login - ShopHub</title>
-        <meta name="description" content="Login to your ShopHub account" />
+        <title>Login - Anjum's</title>
+        <meta name="description" content="Login to your Anjum's account" />
       </Head>
 
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -52,7 +52,7 @@ const Login: React.FC = () => {
             </div>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to ShopHub
+            Sign in to Anjum's
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}

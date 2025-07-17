@@ -82,8 +82,8 @@ export default function Deals() {
   return (
     <>
       <Head>
-        <title>Hot Deals & Flash Sales - ShopHub</title>
-        <meta name="description" content="Don't miss out on amazing deals! Flash sales, daily specials, and exclusive offers on ShopHub." />
+        <title>Hot Deals & Flash Sales - Anjum's</title>
+        <meta name="description" content="Don't miss out on amazing deals! Flash sales, daily specials, and exclusive offers on Anjum's." />
       </Head>
 
       <div className="min-h-screen bg-gray-50">

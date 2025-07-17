@@ -167,7 +167,7 @@ const Products: React.FC = () => {
   return (
     <>
       <Head>
-        <title>Products - ShopHub</title>
+        <title>Products - Anjum's</title>
         <meta name="description" content="Browse our amazing collection of products" />
       </Head>
 

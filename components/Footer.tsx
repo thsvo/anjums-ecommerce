@@ -13,11 +13,11 @@ export default function Footer() {
                 <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold text-2xl px-3 py-1 rounded">
                   S
                 </div>
-                <span className="text-2xl font-bold">ShopHub</span>
+                <span className="text-2xl font-bold">Anjum's</span>
               </div>
               <p className="text-gray-300 mb-6 leading-relaxed">
                 Your trusted online shopping destination for quality products at unbeatable prices. 
-                Shop smart, save big with millions of products from around the world.
+               Ajums's, save big with millions of products from around the world.
               </p>
               <div className="flex space-x-4">
                 <a href="#" className="bg-blue-600 hover:bg-blue-700 p-3 rounded-lg transition duration-300">
@@ -105,7 +105,7 @@ export default function Footer() {
               <div className="space-y-4 mb-6">
                 <div className="flex items-center text-gray-300">
                   <span className="mr-3 text-orange-400">📧</span>
-                  <span>support@shophub.com</span>
+                  <span>support@Anjum's.com</span>
                 </div>
                 <div className="flex items-center text-gray-300">
                   <span className="mr-3 text-orange-400">📞</span>
@@ -141,7 +141,7 @@ export default function Footer() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
-              © 2024 ShopHub. All rights reserved. | Built with ❤️ for amazing shopping experience
+              © 2025 Anjum's. All rights reserved. | Built with ❤️ for amazing shopping experience
             </div>
             
             <div className="flex items-center space-x-6 text-sm">

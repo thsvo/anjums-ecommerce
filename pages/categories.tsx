@@ -144,8 +144,8 @@ export default function Categories() {
   return (
     <>
       <Head>
-        <title>All Categories - ShopHub</title>
-        <meta name="description" content="Browse all product categories on ShopHub. Find electronics, fashion, home goods, and more." />
+        <title>All Categories - Anjum's</title>
+        <meta name="description" content="Browse all product categories on Anjum's. Find electronics, fashion, home goods, and more." />
       </Head>
 
       <div className="min-h-screen bg-gray-50">
