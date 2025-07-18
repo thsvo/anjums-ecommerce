@@ -43,22 +43,28 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const productsPerPage = 12;
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1) => {
+    if (page === 1) setLoading(true);
+    else setLoadingMore(true);
+
     try {
+      const params = {
+        page,
+        limit: productsPerPage,
+      };
+
       const [productsResponse, categoriesResponse, allProductsResponse, trendingResponse] = await Promise.all([
         axios.get('/api/products?featured=true'),
         axios.get('/api/categories'),
-        axios.get('/api/products', {
-          params: {
-            limit: 100 // Get a larger number to show pagination
-          }
-        }),
+        axios.get('/api/products', { params }),
         axios.get('/api/products/trending', {
           params: {
             limit: 4 // Get 4 trending products for the section
@@ -68,13 +74,24 @@ export default function Home() {
 
       setFeaturedProducts(productsResponse.data.products || []);
       setCategories(categoriesResponse.data.categories || []);
-      setAllProducts(allProductsResponse.data.products || []);
+      
+      const newProducts = allProductsResponse.data.products || [];
+      setAllProducts(prev => page === 1 ? newProducts : [...prev, ...newProducts]);
+      setHasMore(newProducts.length === productsPerPage);
+      
       setTrendingProducts(trendingResponse.data.products || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
-      setLoading(false);
+      if (page === 1) setLoading(false);
+      else setLoadingMore(false);
     }
+  };
+
+  const loadMoreProducts = () => {
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    fetchData(nextPage);
   };
 
   const handleSearch = () => {
@@ -99,18 +116,6 @@ export default function Home() {
     }
   };
 
-  // Pagination handler functions
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-    // Smooth scroll to the all products section
-    document.getElementById('all-products-section')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // Get current page products
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = allProducts.slice(indexOfFirstProduct, indexOfLastProduct);
-  const totalPages = Math.ceil(allProducts.length / productsPerPage);
 
   if (loading) {
     return (
@@ -350,7 +355,7 @@ export default function Home() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
-              {currentProducts.length > 0 ? currentProducts.map((product) => (
+              {allProducts.length > 0 ? allProducts.map((product) => (
                 <div key={product.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 group">
                   <Link href={`/product/${product.id}`}>
                     <div className="relative">
@@ -486,41 +491,16 @@ export default function Home() {
               )}
             </div>
             
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
+            {/* Load More Button */}
+            {hasMore && (
               <div className="flex justify-center mt-8">
-                <nav className="flex items-center space-x-2">
-                  <button 
-                    onClick={() => handlePageChange(currentPage > 1 ? currentPage - 1 : 1)}
-                    disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-lg ${currentPage === 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
-                  >
-                    Previous
-                  </button>
-                  
-                  {[...Array(totalPages)].map((_, index) => {
-                    const pageNumber = index + 1;
-                    const isActive = pageNumber === currentPage;
-                    
-                    return (
-                      <button
-                        key={pageNumber}
-                        onClick={() => handlePageChange(pageNumber)}
-                        className={`px-4 py-2 rounded-lg ${isActive ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  })}
-                  
-                  <button 
-                    onClick={() => handlePageChange(currentPage < totalPages ? currentPage + 1 : totalPages)}
-                    disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-lg ${currentPage === totalPages ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
-                  >
-                    Next
-                  </button>
-                </nav>
+                <button
+                  onClick={loadMoreProducts}
+                  disabled={loadingMore}
+                  className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-orange-600 hover:to-red-700 transition-all disabled:opacity-50"
+                >
+                  {loadingMore ? 'Loading...' : 'Load More Products'}
+                </button>
               </div>
             )}
           </div>
