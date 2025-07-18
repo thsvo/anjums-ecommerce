@@ -34,7 +34,7 @@ To start the servers as you requested, you can use the following commands:
 
 ```bash
 pm2 start "npm run server" --name anjums-server
-pm2 start "npm run dev" --name anjums-client
+pm2 start "npm run start" --name anjums-client
 ```
 
 You can check the status of your apps with `pm2 list` or view logs with `pm2 logs anjums-server` and `pm2 logs anjums-client`. Your app is now running on `http://localhost:3000` and the server on `http://localhost:3001`.
