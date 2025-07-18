@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Category } from '@prisma/client';
 import multer from 'multer';
 import { promisify } from 'util';
 import path from 'path';
@@ -75,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           prisma.category.count({ where })
         ]);
         
-        const categoriesWithProductCount = categories.map(category => ({
+        const categoriesWithProductCount = categories.map((category: Category & { products: { id: string }[] }) => ({
           ...category,
           productCount: category.products.length
         }));
