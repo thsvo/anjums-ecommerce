@@ -20,10 +20,7 @@ temp/
 tmp/
 .cache/
 
-# Environment files
-.env
-.env.*.local
-.env.local
+
 
 # OS-specific files
 .DS_Store
