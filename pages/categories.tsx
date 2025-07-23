@@ -23,7 +23,7 @@ export default function Categories() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('/api/server/categories');
+      const response = await axios.get('/api/categories');
       setCategories(response.data.categories || []);
     } catch (error) {
       console.error('Failed to fetch categories:', error);

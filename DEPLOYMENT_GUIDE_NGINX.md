@@ -104,8 +104,12 @@ Prisma supports multiple databases. This example uses PostgreSQL.
 
 2.  **Add your environment variables.** Make sure to include:
     -   `DATABASE_URL`: The connection string for your database (e.g., `postgresql://myappuser:your_password@localhost:5432/myappdb`).
-    -   `NEXT_PUBLIC_API_URL`: The URL of your backend (e.g., `http://anjums.me/api`).
-    -   Any other secrets or keys your application needs.
+    -   `NEXT_PUBLIC_API_URL`: The URL of your backend (e.g., `https://anjums.me/api`).
+    -   `JWT_SECRET`: A secure secret key for JWT tokens (e.g., `your-super-secret-jwt-key-here`).
+    -   `SERVER_PORT`: Set to `3000` for production to match Nginx configuration.
+    -   `NODE_ENV`: Set to `production`.
+    -   `NEXTAUTH_URL`: Your domain URL (e.g., `https://anjums.me`).
+    -   Any SSLCommerz, SMS, or WhatsApp API keys your application needs.
 
 ### 2.4. Set Up the Database with Prisma
 
