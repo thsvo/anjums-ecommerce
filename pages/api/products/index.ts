@@ -94,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         break;
         
       case 'POST':
-        const { name, description, price, categoryId, image, stock, featured, tempImages } = req.body;
+        const { name, description, price, categoryId, image, stock, featured, tempImages, images } = req.body;
         
         if (!name || !price || !categoryId) {
           return res.status(400).json({ error: 'Name, price, and category are required' });
@@ -115,15 +115,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         });
         
-        // If there are temporary images, create them in the database
-        if (tempImages && Array.isArray(tempImages) && tempImages.length > 0) {
+        // Handle images from ImageBB (new format) or tempImages (legacy format)
+        const imagesToCreate = images || tempImages;
+        if (imagesToCreate && Array.isArray(imagesToCreate) && imagesToCreate.length > 0) {
           await Promise.all(
-            tempImages.map(async (tempImage: { url: string, isMain: boolean }) => {
+            imagesToCreate.map(async (imageData: { url: string, isMain: boolean }) => {
               await prisma.productImage.create({
                 data: {
-                  url: tempImage.url,
+                  url: imageData.url,
                   productId: newProduct.id,
-                  isMain: tempImage.isMain,
+                  isMain: imageData.isMain,
                 }
               });
             })

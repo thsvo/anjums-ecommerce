@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../../components/AdminLayout';
+import ImageBBUpload from '../../../components/ImageBBUpload';
+import { useProductImageUpload } from '../../../hooks/useImageBBUpload';
 import axios from 'axios';
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent } from '../../../components/ui/card';
@@ -9,8 +11,9 @@ import { Textarea } from '../../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 import { Badge } from '../../../components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../components/ui/alert-dialog';
-import { Pencil, Trash2, Plus, Search, Image, X, Upload, Check } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
+import { Pencil, Trash2, Plus, Search, Upload, Loader2 } from 'lucide-react';
+import { ProcessedImageBBImage } from '../../../lib/imagebb';
 
 interface Product {
   id: string;
@@ -50,8 +53,7 @@ const AdminProducts: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string>('');
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<ProcessedImageBBImage[]>([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -62,30 +64,17 @@ const AdminProducts: React.FC = () => {
     stock: '',
     featured: false
   });
-  
-  const [uploadedImages, setUploadedImages] = useState<{id: string, url: string, isMain: boolean}[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [imageError, setImageError] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { uploadImages, uploading: imageUploading } = useProductImageUpload();
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
   }, [currentPage, searchTerm, selectedCategory]);
 
-  useEffect(() => {
-    if (imageFiles.length > 0) {
-      const newImagePreviews = imageFiles.map(file => URL.createObjectURL(file));
-      setImagePreviews(newImagePreviews);
-
-      // Clean up object URLs on component unmount or imageFiles change
-      return () => {
-        newImagePreviews.forEach(url => URL.revokeObjectURL(url));
-      };
-    } else {
-      setImagePreviews([]);
-    }
-  }, [imageFiles]);
+  const handleImagesUploaded = (images: ProcessedImageBBImage[]) => {
+    setUploadedImages(images);
+  };
 
   const fetchProducts = async () => {
     try {
@@ -136,7 +125,11 @@ const AdminProducts: React.FC = () => {
         categoryId: formData.categoryId,
         image: formData.image.trim(),
         stock: parseInt(formData.stock) || 0,
-        featured: formData.featured
+        featured: formData.featured,
+        images: uploadedImages.map(img => ({
+          url: img.url,
+          isMain: uploadedImages.indexOf(img) === 0, // First image is main
+        })),
       };
 
       // Validate price
@@ -156,39 +149,14 @@ const AdminProducts: React.FC = () => {
       let response;
       if (editingProduct) {
         response = await axios.put(`/api/products/${editingProduct.id}`, submitData);
-        
-        // If there are new images without a product ID, update them with the product ID
-        if (uploadedImages.some(img => img.id.startsWith('temp_'))) {
-          // Logic to link temporary images to the product would go here
-          // In a real implementation, you'd need to handle this in your API
-        }
       } else {
         response = await axios.post('/api/products', submitData);
-        
-      // If we have uploaded images for a new product, associate them with the product
-        if (uploadedImages.length > 0 && response.data.id) {
-          const productId = response.data.id;
-          
-          // Filter temporary images that need to be associated with the new product
-          const tempImages = uploadedImages.filter(img => img.id.startsWith('temp_'));
-          
-          if (tempImages.length > 0) {
-            // Update the product with the temporary images
-            await axios.put(`/api/products/${productId}`, {
-              tempImages: tempImages.map(img => ({
-                url: img.url,
-                isMain: img.isMain
-              }))
-            });
-          }
-        }
       }
 
       if (response.status === 200 || response.status === 201) {
         await fetchProducts();
         resetForm();
         setIsDialogOpen(false);
-        // You could add a success message here if needed
       }
     } catch (error: any) {
       console.error('Failed to save product:', error);
@@ -225,13 +193,21 @@ const AdminProducts: React.FC = () => {
       featured: product.featured
     });
     
-    // Reset image state
-    setImageFiles([]);
-    setImagePreviews([]);
-    
-    // Load product images if available
+    // Convert existing product images to ImageBB format for display
     if (product.images && product.images.length > 0) {
-      setUploadedImages(product.images);
+      const convertedImages: ProcessedImageBBImage[] = product.images.map(img => ({
+        id: img.id,
+        url: img.url,
+        deleteUrl: '',
+        originalName: 'Existing Image',
+        size: 0,
+        width: 0,
+        height: 0,
+        viewerUrl: img.url,
+        thumbUrl: img.url,
+        mediumUrl: img.url,
+      }));
+      setUploadedImages(convertedImages);
     } else {
       setUploadedImages([]);
     }
@@ -250,125 +226,8 @@ const AdminProducts: React.FC = () => {
       featured: false
     });
     setUploadedImages([]);
-    setImageFiles([]);
-    setImagePreviews([]);
-    setImageError('');
     setEditingProduct(null);
     setError('');
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setImageError('');
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    // Check file types
-    const invalidFiles = Array.from(files).filter(file => !file.type.match(/^image\/(jpeg|png|jpg|webp)$/));
-    if (invalidFiles.length > 0) {
-      setImageError('Only JPG, PNG, and WebP images are allowed');
-      return;
-    }
-
-    // Check file sizes (max 5MB per file)
-    const oversizedFiles = Array.from(files).filter(file => file.size > 5 * 1024 * 1024);
-    if (oversizedFiles.length > 0) {
-      setImageError('Images must be less than 5MB in size');
-      return;
-    }
-    
-    // Update imageFiles state
-    setImageFiles(Array.from(files));
-    
-    uploadFiles(files);
-  };
-
-  const uploadFiles = async (files: FileList) => {
-    if (!editingProduct && !formData.name.trim()) {
-      setError('Please enter a product name before uploading images');
-      return;
-    }
-
-    setIsUploading(true);
-    setImageError('');
-
-    try {
-      const formData = new FormData();
-      
-      // Add each file to form data
-      Array.from(files).forEach(file => {
-        formData.append('files', file);
-      });
-      
-      // Add product ID if editing, or indicate it's for a new product
-      if (editingProduct) {
-        formData.append('productId', editingProduct.id);
-      } else {
-        formData.append('isNew', 'true');
-      }
-      
-      // Set first image as main if no images exist yet
-      formData.append('isMain', (!uploadedImages || uploadedImages.length === 0).toString());
-
-      const response = await axios.post('/api/products/upload-images', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      setUploadedImages(prev => [...prev, ...response.data.images]);
-    } catch (error: any) {
-      console.error('Failed to upload images:', error);
-      setImageError(error.response?.data?.error || 'Failed to upload images');
-    } finally {
-      setIsUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  const handleDeleteImage = async (imageId: string) => {
-    try {
-      if (imageId.startsWith('temp_')) {
-        // Remove from local state only for newly added images that aren't saved yet
-        setUploadedImages(prev => prev.filter(img => img.id !== imageId));
-      } else {
-        // Delete from server for existing images
-        await axios.delete(`/api/products/images?productId=${editingProduct?.id}&imageId=${imageId}`);
-        setUploadedImages(prev => prev.filter(img => img.id !== imageId));
-      }
-    } catch (error) {
-      console.error('Failed to delete image:', error);
-      setImageError('Failed to delete image');
-    }
-  };
-
-  const setMainImage = async (imageId: string) => {
-    try {
-      if (editingProduct) {
-        await axios.put(`/api/products/images?productId=${editingProduct.id}`, { imageId });
-        
-        // Update local state
-        setUploadedImages(prev => 
-          prev.map(img => ({
-            ...img,
-            isMain: img.id === imageId
-          }))
-        );
-      } else {
-        // For new products, just update local state
-        setUploadedImages(prev => 
-          prev.map(img => ({
-            ...img,
-            isMain: img.id === imageId
-          }))
-        );
-      }
-    } catch (error) {
-      console.error('Failed to set main image:', error);
-      setImageError('Failed to set main image');
-    }
   };
 
   if (loading) {
@@ -542,180 +401,170 @@ const AdminProducts: React.FC = () => {
           )}
           
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name">Product Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  className={!formData.name.trim() && error ? 'border-red-500' : ''}
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="images">Images (ImageBB)</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="basic" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Product Name *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      className={!formData.name.trim() && error ? 'border-red-500' : ''}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="price">Price ($) *</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      required
+                      className={(!formData.price || parseFloat(formData.price) <= 0) && error ? 'border-red-500' : ''}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="category">Category *</Label>
+                    <Select 
+                      value={formData.categoryId} 
+                      onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+                    >
+                      <SelectTrigger className={!formData.categoryId && error ? 'border-red-500' : ''}>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="stock">Stock Quantity</Label>
+                    <Input
+                      id="stock"
+                      type="number"
+                      min="0"
+                      value={formData.stock}
+                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="image">Image URL (Legacy support)</Label>
+                  <Input
+                    id="image"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="featured"
+                    checked={formData.featured}
+                    onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                  />
+                  <Label htmlFor="featured">Featured Product</Label>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="images" className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-900 mb-2">ImageBB Integration</h4>
+                  <p className="text-sm text-blue-700">
+                    Images are uploaded to ImageBB and hosted on their CDN for fast, reliable delivery. 
+                    The first image will be set as the main product image.
+                  </p>
+                </div>
+
+                <ImageBBUpload
+                  onImagesUploaded={handleImagesUploaded}
+                  maxFiles={10}
+                  namePrefix={formData.name ? `product_${formData.name.toLowerCase().replace(/\s+/g, '_')}` : 'product'}
+                  showPreview={true}
                 />
-              </div>
-              <div>
-                <Label htmlFor="price">Price ($) *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  required
-                  className={(!formData.price || parseFloat(formData.price) <= 0) && error ? 'border-red-500' : ''}
-                />
-              </div>
-            </div>
 
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={3}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="category">Category *</Label>
-                <Select 
-                  value={formData.categoryId} 
-                  onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
-                >
-                  <SelectTrigger className={!formData.categoryId && error ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="stock">Stock Quantity</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  min="0"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="image">Image URL (Legacy support)</Label>
-              <Input
-                id="image"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
-
-            <div>
-              <Label>Product Images</Label>
-              <div className="mt-2 border border-dashed border-gray-300 rounded-md p-4">
-                {imageError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded mb-4 text-sm">
-                    {imageError}
+                {uploadedImages.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Selected Images for Product</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {uploadedImages.map((image, index) => (
+                        <div key={image.id} className="relative group">
+                          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                            <img
+                              src={image.thumbUrl || image.url}
+                              alt={`Product ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="secondary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(image.url);
+                                }}
+                              >
+                                Copy URL
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="secondary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(image.viewerUrl || image.url, '_blank');
+                                }}
+                              >
+                                View
+                              </Button>
+                            </div>
+                          </div>
+                          {index === 0 && (
+                            <div className="absolute top-2 left-2">
+                              <Badge className="bg-green-500">Main</Badge>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-                
-                <div className="flex flex-wrap gap-3 mb-4">
-                  {uploadedImages.map((image) => (
-                    <div key={image.id} className="relative group">
-                      <div className="w-24 h-24 rounded-md overflow-hidden border border-gray-200">
-                        <img 
-                          src={image.url} 
-                          alt="Product" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                        <button
-                          type="button"
-                          className="p-1 bg-white rounded-full"
-                          onClick={() => setMainImage(image.id)}
-                          title="Set as main image"
-                        >
-                          {image.isMain ? (
-                            <Check className="w-4 h-4 text-green-500" />
-                          ) : (
-                            <Image className="w-4 h-4 text-gray-500" />
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          className="p-1 bg-white rounded-full"
-                          onClick={() => handleDeleteImage(image.id)}
-                          title="Delete image"
-                        >
-                          <X className="w-4 h-4 text-red-500" />
-                        </button>
-                      </div>
-                      {image.isMain && (
-                        <div className="absolute -top-1 -right-1">
-                          <Badge className="bg-green-500">Main</Badge>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="flex items-center justify-center">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="imageUpload"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="w-full"
-                  >
-                    {isUploading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Images
-                      </>
-                    )}
-                  </Button>
-                </div>
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  Upload JPG, PNG, or WebP images (max 5MB each)
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="featured"
-                checked={formData.featured}
-                onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-              />
-              <Label htmlFor="featured">Featured Product</Label>
-            </div>
+              </TabsContent>
+            </Tabs>
 
             <div className="flex justify-end space-x-2">
               <Button 
