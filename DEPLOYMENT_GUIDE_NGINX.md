@@ -136,15 +136,15 @@ PM2 is a process manager that will keep your application running in the backgrou
     ```
 
 2.  **Start your application:**
-    Your `package.json` has a `server.js` file, which suggests a custom server. You should start this server.
+    Your `package.json` has a `server.js` file, which is a unified server that serves both API and Next.js.
     ```bash
+    # Set the correct port for production (should match Nginx proxy)
+    export SERVER_PORT=3000
     pm2 start server.js --name anjums-ecommerce
     ```
-    If you were to run the standard Next.js start, you would use:
-    ```bash
-    # pm2 start npm --name "anjums-ecommerce" -- start
-    ```
-    Check your `server.js` to confirm which port it's running on (usually 3000).
+    
+    **Important**: The `server.js` file serves both the API routes and Next.js app on the same port.
+    Make sure `SERVER_PORT` is set to 3000 to match your Nginx configuration.
 
 3.  **Enable PM2 to start on boot:**
     ```bash

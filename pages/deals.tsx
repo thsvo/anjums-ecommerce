@@ -32,7 +32,7 @@ export default function Deals() {
   const fetchDeals = async () => {
     try {
       // In a real app, you'd have specific endpoints for deals
-      const response = await axios.get('/api/server/products/featured/list');
+      const response = await axios.get('/api/products/featured/list');
       const products = response.data.products || [];
       setFlashDeals(products.slice(0, 8));
       setDailyDeals(products.slice(8, 16));
