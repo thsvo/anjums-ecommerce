@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
 import { Badge } from '../../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
-import { Upload, Image as ImageIcon, ExternalLink, Copy, Loader2 } from 'lucide-react';
+import { Upload, Image as ImageIcon, ExternalLink, Copy, Loader2, Star, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
 interface Product {
@@ -58,6 +58,7 @@ const AdminProductsImageBB: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [primaryImageIndex, setPrimaryImageIndex] = useState<number>(0);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -98,6 +99,7 @@ const AdminProductsImageBB: React.FC = () => {
 
   const handleImagesUploaded = (images: UploadedImage[]) => {
     setUploadedImages(images);
+    setPrimaryImageIndex(0); // Set first image as primary by default
   };
 
   const openDialog = (product?: Product) => {
@@ -123,6 +125,7 @@ const AdminProductsImageBB: React.FC = () => {
       });
     }
     setUploadedImages([]);
+    setPrimaryImageIndex(0);
     setIsDialogOpen(true);
   };
 
@@ -130,6 +133,53 @@ const AdminProductsImageBB: React.FC = () => {
     setIsDialogOpen(false);
     setEditingProduct(null);
     setUploadedImages([]);
+    setPrimaryImageIndex(0);
+  };
+
+  const setPrimaryImage = (index: number) => {
+    setPrimaryImageIndex(index);
+  };
+
+  const moveImageUp = (index: number) => {
+    if (index > 0) {
+      const newImages = [...uploadedImages];
+      [newImages[index], newImages[index - 1]] = [newImages[index - 1], newImages[index]];
+      setUploadedImages(newImages);
+      
+      // Update primary index if needed
+      if (primaryImageIndex === index) {
+        setPrimaryImageIndex(index - 1);
+      } else if (primaryImageIndex === index - 1) {
+        setPrimaryImageIndex(index);
+      }
+    }
+  };
+
+  const moveImageDown = (index: number) => {
+    if (index < uploadedImages.length - 1) {
+      const newImages = [...uploadedImages];
+      [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]];
+      setUploadedImages(newImages);
+      
+      // Update primary index if needed
+      if (primaryImageIndex === index) {
+        setPrimaryImageIndex(index + 1);
+      } else if (primaryImageIndex === index + 1) {
+        setPrimaryImageIndex(index);
+      }
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = uploadedImages.filter((_, i) => i !== index);
+    setUploadedImages(newImages);
+    
+    // Update primary index if needed
+    if (primaryImageIndex === index) {
+      setPrimaryImageIndex(0);
+    } else if (primaryImageIndex > index) {
+      setPrimaryImageIndex(primaryImageIndex - 1);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,9 +190,9 @@ const AdminProductsImageBB: React.FC = () => {
         ...formData,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
-        images: uploadedImages.map(img => ({
+        images: uploadedImages.map((img, index) => ({
           url: img.url,
-          isMain: uploadedImages.indexOf(img) === 0, // First image is main
+          isMain: index === primaryImageIndex, // Selected primary image
         })),
       };
 
@@ -321,48 +371,68 @@ const AdminProductsImageBB: React.FC = () => {
 
                 <TabsContent value="images" className="space-y-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-900 mb-2">ImageBB Integration</h4>
+                    <h4 className="font-medium text-blue-900 mb-2">ImageBB Integration - Unlimited Photos</h4>
                     <p className="text-sm text-blue-700">
-                      Images are uploaded to ImageBB and hosted on their CDN for fast, reliable delivery. 
-                      The first image will be set as the main product image.
+                      Upload unlimited product photos hosted on ImageBB CDN for fast, reliable delivery. 
+                      Select any image as the primary photo, reorder images, and manage your product gallery.
                     </p>
                   </div>
 
                   <ImageBBUpload
                     onImagesUploaded={handleImagesUploaded}
-                    maxFiles={10}
+                    maxFiles={20}
                     namePrefix={formData.name ? `product_${formData.name.toLowerCase().replace(/\s+/g, '_')}` : 'product'}
                     showPreview={true}
                   />
 
                   {uploadedImages.length > 0 && (
                     <div className="space-y-3">
-                      <h4 className="font-medium">Selected Images for Product</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Product Images ({uploadedImages.length})</h4>
+                        <p className="text-sm text-gray-500">Click the star to set primary image</p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3">
                         {uploadedImages.map((image, index) => (
-                          <Card key={image.id}>
+                          <Card key={image.id} className={`${index === primaryImageIndex ? 'ring-2 ring-blue-500' : ''}`}>
                             <CardContent className="p-3">
                               <div className="flex items-start gap-3">
-                                <img
-                                  src={image.thumbUrl}
-                                  alt={`Product ${index + 1}`}
-                                  className="w-16 h-16 object-cover rounded"
-                                />
+                                <div className="relative">
+                                  <img
+                                    src={image.thumbUrl}
+                                    alt={`Product ${index + 1}`}
+                                    className="w-20 h-20 object-cover rounded"
+                                  />
+                                  {index === primaryImageIndex && (
+                                    <div className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full p-1">
+                                      <Star className="h-3 w-3 fill-current" />
+                                    </div>
+                                  )}
+                                </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="text-sm font-medium">
                                       Image {index + 1}
                                     </span>
-                                    {index === 0 && (
-                                      <Badge variant="secondary" className="text-xs">
-                                        Main
+                                    {index === primaryImageIndex && (
+                                      <Badge variant="default" className="text-xs">
+                                        Primary
                                       </Badge>
                                     )}
                                   </div>
                                   <p className="text-xs text-gray-500 truncate">
                                     {image.width} × {image.height} • {(image.size / 1024).toFixed(1)} KB
                                   </p>
-                                  <div className="flex gap-1 mt-2">
+                                  <div className="flex gap-1 mt-2 flex-wrap">
+                                    <Button
+                                      type="button"
+                                      variant={index === primaryImageIndex ? "default" : "outline"}
+                                      size="sm"
+                                      className="text-xs h-6"
+                                      onClick={() => setPrimaryImage(index)}
+                                    >
+                                      <Star className="h-3 w-3 mr-1" />
+                                      Primary
+                                    </Button>
                                     <Button
                                       type="button"
                                       variant="outline"
@@ -371,7 +441,7 @@ const AdminProductsImageBB: React.FC = () => {
                                       onClick={() => copyImageUrl(image.url)}
                                     >
                                       <Copy className="h-3 w-3 mr-1" />
-                                      Copy URL
+                                      Copy
                                     </Button>
                                     <Button
                                       type="button"
@@ -384,6 +454,37 @@ const AdminProductsImageBB: React.FC = () => {
                                       View
                                     </Button>
                                   </div>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => moveImageUp(index)}
+                                    disabled={index === 0}
+                                  >
+                                    <ArrowUp className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => moveImageDown(index)}
+                                    disabled={index === uploadedImages.length - 1}
+                                  >
+                                    <ArrowDown className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => removeImage(index)}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
                                 </div>
                               </div>
                             </CardContent>

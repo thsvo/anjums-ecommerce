@@ -409,18 +409,19 @@ const ProductDetail: React.FC = () => {
             <div className="flex flex-col-reverse">
               {/* Image selector - thumbnails */}
               {product.images && product.images.length > 1 && (
-                <div className="hidden mt-6 w-full max-w-2xl mx-auto sm:block lg:max-w-none">
-                  <div className="grid grid-cols-4 gap-6">
+                <div className="mt-6 w-full max-w-2xl mx-auto lg:max-w-none">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">More Views</h4>
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-4 lg:gap-6">
                     {product.images.map((image, idx) => (
                       <button
                         key={image.id}
                         onClick={() => setSelectedImage(idx)}
-                        className={`relative h-24 bg-white rounded-md flex items-center justify-center text-sm font-medium uppercase text-gray-900 cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring focus:ring-offset-4 focus:ring-opacity-50 ${
-                          selectedImage === idx ? 'ring-2 ring-blue-500' : ''
+                        className={`relative h-20 sm:h-24 lg:h-28 bg-white rounded-lg flex items-center justify-center text-sm font-medium uppercase text-gray-900 cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                          selectedImage === idx ? 'ring-2 ring-blue-500 shadow-lg transform scale-105' : 'hover:shadow-md'
                         }`}
                       >
                         <span className="sr-only">Image {idx + 1}</span>
-                        <span className="absolute inset-0 rounded-md overflow-hidden">
+                        <span className="absolute inset-0 rounded-lg overflow-hidden">
                           <Image
                             src={image.url}
                             alt={`${product.name} view ${idx + 1}`}
@@ -428,6 +429,12 @@ const ProductDetail: React.FC = () => {
                             className="w-full h-full object-center object-cover"
                           />
                         </span>
+                        {image.isMain && (
+                           <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded">
+                             <span className="hidden sm:inline">Primary</span>
+                             <span className="sm:hidden">★</span>
+                           </div>
+                         )}
                       </button>
                     ))}
                   </div>
@@ -465,7 +472,7 @@ const ProductDetail: React.FC = () => {
               </div>
 
               {/* Reviews */}
-              <div className="mt-3">
+              {/* <div className="mt-3">
                 <h3 className="sr-only">Reviews</h3>
                 <div className="flex items-center">
                   <div className="flex items-center">
@@ -476,7 +483,7 @@ const ProductDetail: React.FC = () => {
                     {product.reviewCount} reviews
                   </a>
                 </div>
-              </div>
+              </div> */}
 
               <div className="mt-6">
                 <h3 className="sr-only">Description</h3>
@@ -552,7 +559,7 @@ const ProductDetail: React.FC = () => {
                     >
                       {addingToCart ? (
                         <>
-                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-black" fill="none" viewBox="0 0 24 24">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
@@ -563,12 +570,12 @@ const ProductDetail: React.FC = () => {
                           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 2.5M7 13l2.5 2.5M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z" />
                           </svg>
-                          Add to Cart
+                          <span className="text-white">Add to Cart</span>
                         </>
                       )}
                     </button>
 
-                    <button
+                    {/* <button
                       type="button"
                       onClick={handleBuyNowWithPayment}
                       disabled={buyingNow}
@@ -590,7 +597,7 @@ const ProductDetail: React.FC = () => {
                           Buy Now with Card Payment
                         </>
                       )}
-                    </button>
+                    </button> */}
 
                     <button
                       type="button"
@@ -607,7 +614,7 @@ const ProductDetail: React.FC = () => {
                       <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span className="text-sm text-gray-700">Free delivery on orders over ৳50</span>
+                      <span className="text-sm text-gray-700">Free delivery on orders over ৳2000</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -615,12 +622,7 @@ const ProductDetail: React.FC = () => {
                       </svg>
                       <span className="text-sm text-gray-700">30-day return policy</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                      <span className="text-sm text-gray-700">Secure payment</span>
-                    </div>
+                    
                   </div>
                 </div>
               )}
@@ -628,7 +630,7 @@ const ProductDetail: React.FC = () => {
           </div>
 
           {/* Reviews section */}
-          {product.reviews.length > 0 && (
+          {/* {product.reviews.length > 0 && (
             <div id="reviews" className="mt-16 lg:mt-24">
               <div className="max-w-2xl mx-auto lg:max-w-7xl">
                 <h2 className="text-2xl font-bold tracking-tight text-gray-900">Customer Reviews</h2>
@@ -670,7 +672,7 @@ const ProductDetail: React.FC = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Checkout Modal */}
@@ -964,6 +966,8 @@ const ProductDetail: React.FC = () => {
           </div>
         )}
       </main>
+
+
 
     </div>
   );

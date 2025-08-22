@@ -266,10 +266,7 @@ export default function Home() {
                 <span>📂</span>
                 <span>All Categories</span>
               </Link>
-              <Link href="/brands" className="flex items-center space-x-2 text-purple-600 hover:text-purple-800">
-                <span>⭐</span>
-                <span>Top Brands</span>
-              </Link>
+
               <Link href="/new-arrivals" className="flex items-center space-x-2 text-green-600 hover:text-green-800">
                 <span>✨</span>
                 <span>New Arrivals</span>
@@ -316,26 +313,11 @@ export default function Home() {
                   </div>
                 </Link>
               )) : (
-                // Fallback categories if none exist
-                [
-                  { name: 'Electronics', icon: '📱', color: 'from-blue-400 to-blue-600' },
-                  { name: 'Fashion', icon: '👕', color: 'from-pink-400 to-pink-600' },
-                  { name: 'Home & Garden', icon: '🏠', color: 'from-green-400 to-green-600' },
-                  { name: 'Sports', icon: '⚽', color: 'from-orange-400 to-orange-600' },
-                  { name: 'Books', icon: '📚', color: 'from-purple-400 to-purple-600' },
-                  { name: 'Beauty', icon: '💄', color: 'from-red-400 to-red-600' },
-                  { name: 'Automotive', icon: '🚗', color: 'from-gray-400 to-gray-600' },
-                  { name: 'Toys & Games', icon: '🎮', color: 'from-yellow-400 to-yellow-600' }
-                ].map((category, index) => (
-                  <Link key={index} href={`/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`}>
-                    <div className="group bg-gradient-to-br from-gray-50 to-white hover:from-orange-50 hover:to-red-50 p-6 rounded-2xl text-center transition-all duration-300 cursor-pointer border border-gray-100 hover:border-orange-200 hover:shadow-lg transform hover:-translate-y-1">
-                      <div className={`w-16 h-16 mx-auto mb-4 bg-gradient-to-br ${category.color} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <span className="text-white text-2xl">{category.icon}</span>
-                      </div>
-                      <h3 className="font-semibold text-gray-800 text-sm group-hover:text-orange-600 transition-colors">{category.name}</h3>
-                    </div>
-                  </Link>
-                ))
+                <div className="col-span-full text-center py-12">
+                  <div className="text-6xl mb-4">📂</div>
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">No Categories Available</h3>
+                  <p className="text-gray-500">Categories will appear here once they are added to the store.</p>
+                </div>
               )}
             </div>
           </div>
@@ -419,75 +401,14 @@ export default function Home() {
                   </Link>
                 </div>
               )) : (
-                // Sample products if none exist
-                Array.from({ length: 12 }, (_, i) => (
-                  <div key={i} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                    <div className="relative">
-                      <img
-                        src={`https://via.placeholder.com/250x200?text=Product+${i + 1}`}
-                        alt={`Sample Product ${i + 1}`}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform"
-                      />
-                      <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-all">
-                        <svg className="w-4 h-4 text-gray-600 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                      </button>
-                      {i % 3 === 0 && (
-                        <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          Sale
-                        </div>
-                      )}
-                      {i % 3 === 1 && (
-                        <div className="absolute top-3 left-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          New
-                        </div>
-                      )}
-                      {i % 3 === 2 && (
-                        <div className="absolute top-3 left-3 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          Popular
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">Product {i + 1}</h3>
-                      <div className="flex items-center mb-2">
-                        <div className="flex text-yellow-400 text-sm">★★★★★</div>
-                        <span className="text-gray-600 text-sm ml-2">({10 + i})</span>
-                      </div>
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <span className="text-2xl font-bold text-orange-600">${19.99 + i * 5}</span>
-                          {i % 2 === 0 && <span className="text-gray-500 line-through text-sm ml-2">${29.99 + i * 5}</span>}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            // Sample product demonstration - show alert
-                            alert(`This is a demo product. In a real store, this would add Product ${i + 1} to your cart.`);
-                          }}
-                          className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all transform hover:scale-105"
-                        >
-                          Add to Cart
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            // View details functionality for sample products
-                            alert(`Sample Product ${i + 1} details would be shown here`);
-                          }}
-                          className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-semibold transition-all"
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                <div className="col-span-full text-center py-16">
+                  <div className="text-6xl mb-6">🛍️</div>
+                  <h3 className="text-2xl font-semibold text-gray-600 mb-4">No Products Available</h3>
+                  <p className="text-gray-500 mb-6">Products will appear here once they are added to the store.</p>
+                  <Link href="/admin/products" className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-700 transition-all">
+                    Add Products
+                  </Link>
+                </div>
               )}
             </div>
             
@@ -634,74 +555,17 @@ export default function Home() {
                   </div>
                 </div>
               )) : (
-                // Fallback when no trending category products are available
-                Array.from({ length: 4 }, (_, i) => (
-                  <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group">
-                    <div className="relative">
-                      <img
-                        src={`https://via.placeholder.com/300x200?text=Trending+Categories`}
-                        alt={`Trending Category ${i + 1}`}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform"
-                      />
-                      <div className="absolute top-3 left-3 bg-gradient-to-r from-gray-400 to-gray-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                        Coming Soon
-                      </div>
-                      <div className="absolute top-3 right-3 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                        Category
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <div className="mb-2">
-                        <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
-                          Sample Category
-                        </span>
-                      </div>
-                      <h3 className="font-bold text-lg text-gray-900 mb-2">Trending Categories Coming Soon</h3>
-                      <div className="flex items-center mb-3">
-                        <div className="flex text-gray-300 text-sm">☆☆☆☆☆</div>
-                        <span className="text-gray-600 text-sm ml-2">(No reviews yet)</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-2xl font-bold text-gray-400">$--</span>
-                        </div>
-                        <button className="bg-gray-400 text-white px-3 py-2 rounded-lg font-semibold text-sm cursor-not-allowed">
-                          Coming Soon
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                <div className="col-span-full text-center py-16">
+                  <div className="text-6xl mb-6">🔥</div>
+                  <h3 className="text-2xl font-semibold text-gray-600 mb-4">No Trending Products</h3>
+                  <p className="text-gray-500">Trending products will appear here based on customer activity and sales data.</p>
+                </div>
               )}
             </div>
           </div>
         </section>
 
-        {/* Top Brands Section */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold mb-4 text-gray-900">Top Brands</h2>
-              <p className="text-gray-600 text-lg">Shop from the world's most trusted brands</p>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-              {[
-                { name: 'Apple', logo: '🍎' },
-                { name: 'Samsung', logo: '📱' },
-                { name: 'Nike', logo: '✓' },
-                { name: 'Adidas', logo: '🏃' },
-                { name: 'Sony', logo: '🎮' },
-                { name: 'LG', logo: '📺' }
-              ].map((brand, index) => (
-                <div key={index} className="bg-gray-50 hover:bg-white border border-gray-200 hover:border-orange-200 rounded-xl p-6 text-center transition-all duration-300 hover:shadow-lg group cursor-pointer">
-                  <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{brand.logo}</div>
-                  <h3 className="font-semibold text-gray-800 group-hover:text-orange-600 transition-colors">{brand.name}</h3>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+
 
         {/* Enhanced Featured Products */}
         <section className="py-16 bg-gradient-to-br from-blue-50 to-purple-50">
@@ -781,75 +645,14 @@ export default function Home() {
                   </Link>
                 </div>
               )) : (
-                // Enhanced sample products if none exist
-                Array.from({ length: 10 }, (_, i) => (
-                  <div key={i} className="bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                    <div className="relative">
-                      <img
-                        src={`https://via.placeholder.com/250x200?text=Product+${i + 1}`}
-                        alt={`Sample Product ${i + 1}`}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform"
-                      />
-                      <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-all">
-                        <svg className="w-4 h-4 text-gray-600 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                      </button>
-                      {i < 3 && (
-                        <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          Sale
-                        </div>
-                      )}
-                      {i >= 3 && i < 6 && (
-                        <div className="absolute top-3 left-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          New
-                        </div>
-                      )}
-                      {i >= 6 && (
-                        <div className="absolute top-3 left-3 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                          Popular
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">Premium Product {i + 1}</h3>
-                      <div className="flex items-center mb-2">
-                        <div className="flex text-yellow-400 text-sm">★★★★★</div>
-                        <span className="text-gray-600 text-sm ml-2">(89)</span>
-                      </div>
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <span className="text-2xl font-bold text-orange-600">${29 + i * 10}</span>
-                          {i < 3 && <span className="text-gray-500 line-through text-sm ml-2">${39 + i * 10}</span>}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            // Sample product demonstration - show alert
-                            alert(`This is a demo premium product. In a real store, this would add Premium Product ${i + 1} to your cart.`);
-                          }}
-                          className="flex-1 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-all transform hover:scale-105"
-                        >
-                          Add to Cart
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            // View details functionality for sample products
-                            alert(`Premium Product ${i + 1} details would be shown here`);
-                          }}
-                          className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-semibold transition-all"
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                <div className="col-span-full text-center py-16">
+                  <div className="text-6xl mb-6">⭐</div>
+                  <h3 className="text-2xl font-semibold text-gray-600 mb-4">No Featured Products</h3>
+                  <p className="text-gray-500 mb-6">Featured products will appear here once they are marked as featured in the admin panel.</p>
+                  <Link href="/admin/products" className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-700 transition-all">
+                    Manage Products
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -927,7 +730,7 @@ export default function Home() {
         </section>
 
         {/* Customer Reviews */}
-        <section className="py-16 bg-white">
+        {/* <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold mb-4 text-gray-900">What Our Customers Say</h2>
@@ -972,7 +775,7 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </section>
+        </section> */}
         
     
       </div>

@@ -137,6 +137,9 @@ const AdminOrdersPage = () => {
                       Customer
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Shipping Address
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Items
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -162,7 +165,32 @@ const AdminOrdersPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{order.customerName}</div>
                         <div className="text-sm text-gray-500">{order.customerEmail}</div>
-                        <div className="text-sm text-gray-500">{order.customerPhone}</div>
+                        <div className="text-sm text-gray-500 flex items-center">
+                          {order.customerPhone}
+                          {order.customerPhone && (
+                            <button
+                              onClick={() => navigator.clipboard.writeText(order.customerPhone)}
+                              className="ml-2 p-1 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs"
+                              title="Copy phone number to clipboard"
+                            >
+                              📋
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 max-w-xs truncate" title={order.shippingAddress}>
+                          {order.shippingAddress || 'No address provided'}
+                          {order.shippingAddress && (
+                            <button
+                              onClick={() => navigator.clipboard.writeText(order.shippingAddress)}
+                              className="ml-2 p-1 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs"
+                              title="Copy address to clipboard"
+                            >
+                              📋
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
