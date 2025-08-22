@@ -55,7 +55,7 @@ export function withRateLimit(
 
 // CORS middleware
 export function withCORS(
-  origins: string[] = ['http://localhost:3000', 'http://localhost:5001']
+  origins: string[] = ['https://anjums.me', 'https://whatsapp-two-delta.vercel.app']
 ) {
   return (handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void> | void) => {
     return async (req: NextApiRequest, res: NextApiResponse) => {
